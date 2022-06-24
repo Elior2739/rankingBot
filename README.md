@@ -13,3 +13,4 @@ Ranking bot that ranks servers by their vote count.
 - Make cooldowns for commands.
 - Make API For fetching votes amount by the owner.
 - Make option to edit the logo, description, invite link to server owners
+- Change `awaitMessageComponent` & `awaitModalSubmit` to events
