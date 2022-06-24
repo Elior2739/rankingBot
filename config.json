@@ -1,0 +1,39 @@
+{
+	"client": {
+        "token": "YOUR_TOKEN"
+	},
+
+	"database": {
+		"host": "localhost",
+		"port": 3306,
+		"user": "root",
+		"password": "",
+		"database": "rankingbot",
+		"namedPlaceholders": true
+	},
+
+	"settings": {
+		"humanize-duration": {
+			"delimiter": " and ",
+			"largest": 2,
+			"round": true,
+			"units": [
+				"y",
+				"mo",
+				"w",
+				"d",
+				"h",
+				"m"
+			]
+		},
+
+		"servers": {
+			"update-time": 60000
+		}
+	},
+
+	"channels": {
+		"server-requests": "",
+		"vote-logs": ""
+	}
+}
