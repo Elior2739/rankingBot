@@ -1,6 +1,7 @@
 {
 	"client": {
-        "token": "YOUR_TOKEN"
+        	"token": "YOUR_TOKEN",
+		"guild" "YOUR_SERVER_ID"
 	},
 
 	"database": {
