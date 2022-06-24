@@ -460,9 +460,10 @@ client.once("ready", () => {
 
 	const guild = client.guilds.cache.get(config.client.guild);
 
+
 	if(guild) {
-		guild.commands.fetch().then(commands => {
-			if(commands.size == 0) {
+		guild.commands.fetch().then(guildCommands => {
+			if(guildCommands.size ==	 0) {
 				guild.commands.set(commands.map(command => {
 					return {
 						name: command.name,
