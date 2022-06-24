@@ -257,11 +257,11 @@ const commands = [
 								interaction.editReply({content: "Failed to send the message, The error has been logged to the console."});
 								console.error(err);
 							})
-						}).catch(err => {
+						}).catch(() => {
 							currentAdders.splice(currentAdders.indexOf(interaction.user.id), 1);
 							resultInteraction.editReply({content: "You failed to answer in time"});
 						});
-					}).catch(err => {
+					}).catch(() => {
 						currentAdders.splice(currentAdders.indexOf(interaction.user.id), 1);
 						interaction.editReply({content: "You failed to answer in time", components: []});
 					})
@@ -281,7 +281,8 @@ const commands = [
 						name: command.name,
 						description: command.description,
 						defaultMemberPermissions: command.defaultMemberPermissions,
-						dmPermission: command.dmPermission
+						dmPermission: command.dmPermission,
+						options: command.options,
 					}
 				})).then(() => {
 					interaction.editReply({content: "Successfully deployed commands"});
@@ -440,7 +441,6 @@ const interactions = {
 };
 
 client.once("ready", () => {
-
 	setInterval(() => {
 		database.query("SELECT `channel` FROM `channels` ORDER BY `votes` DESC").then(res => {
 			res = res[0];
@@ -458,13 +458,41 @@ client.once("ready", () => {
 		});
 	}, config.settings.servers["update-time"]);
 
+	const guild = client.guilds.cache.get(config.client.guild);
+
+	if(guild) {
+		guild.commands.fetch().then(commands => {
+			if(commands.size == 0) {
+				guild.commands.set(commands.map(command => {
+					return {
+						name: command.name,
+						description: command.description,
+						defaultMemberPermissions: command.defaultMemberPermissions,
+						dmPermission: command.dmPermission,
+						options: command.options,
+					}
+				})).then(() => {
+					console.log("Successfully deployed commands");
+				}).catch(err => {
+					console.log("Failed to deploy commands, The error has been logged to the console.");
+					console.error(err);
+				});
+			}
+		})
+	}
+
 	console.log("I'm ready, Logged in as " + client.user.tag);
+});
+
+process.on("uncaughtException", (err) => { // No no, don't crash me there.
+	console.error(err);
 });
 
 client.on("channelDelete", (channel) => {
 	if(channel.children != null) {
 		database.query("SELECT `id` FROM `categories` WHERE channel = ?", [channel.id]).then(res => {
 			res = res[0];
+
 			if(res.length > 0 && res[0].id != null) {
 				database.execute("DELETE FROM `categories` WHERE `id` = ?", [res[0].id]);
 				database.execute("DELETE FROM `channels` WHERE `category` = ?", [res[0].id]);
