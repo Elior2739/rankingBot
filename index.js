@@ -93,6 +93,7 @@ const voteButton = new ActionRowBuilder().setComponents([
 ]);
 
 const linkRegex = /(https?:\/\/[^\s]+)/g;
+const discordRegex = /(https?:\/\/)?(www\.)?((discordapp\.com\/invite)|(discord\.gg))\/(\w+)/gm;
 const currentAdders = []; // Very good name
 
 const commands = [
@@ -186,6 +187,10 @@ const commands = [
 							if(!linkRegex.test(logo)) {
 								currentAdders.splice(currentAdders.indexOf(interaction.user.id), 1);
 								modalInteraction.reply({content: "Invalid logo link", ephemeral: true});
+								return;
+							} else if(!discordRegex.test(link)) {
+								currentAdders.splice(currentAdders.indexOf(interaction.user.id), 1);
+								modalInteraction.reply({content: "Invalid discord link invite", ephemeral: true});
 								return;
 							}
 
@@ -337,7 +342,7 @@ const interactions = {
 					},
 					{
 						name: "Discord Link",
-						value: requestData.link,
+						value: "[Click Here](" + (requestData.link.startsWith("https") ? requestData.link : "https://" + requestData.link) + ")",
 						inline: true
 					},
 					{
