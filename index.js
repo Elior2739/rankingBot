@@ -108,7 +108,7 @@ const voteButton = new ActionRowBuilder().setComponents([
 
 const linkRegex = /(https?:\/\/[^\s]+)/g;
 const discordRegex = /(https?:\/\/)?(www\.)?((discordapp\.com\/invite)|(discord\.gg))\/(\w+)/gm;
-const currentAdders = {}; // Very good name
+const addData = {};
 
 const commands = [
 	{
@@ -158,11 +158,6 @@ const commands = [
 		 * @param {ChatInputCommandInteraction} interaction 
 		 */
 		execute: async (interaction) => {
-			if(currentAdders[interaction.user.id] != null) {
-				interaction.reply({content: "You are already adding a channel"});
-				return;
-			}
-
 			await interaction.reply({content: "Fetching categories...", ephemeral: true});
 			const res = (await database.query("SELECT `id`, `channel` FROM `categories`"))[0];
 			const options = [];
@@ -182,9 +177,7 @@ const commands = [
 				return;
 			}
 
-			currentAdders[interaction.user.id] = {openedModal: () => interaction.editReply({content: "Modal has been opened for you.", components: []})}; // How I love discord API
 			addChannelRow.components[0].setOptions(options);
-
 			interaction.editReply({content: "These are the categories that you can use.", components: [addChannelRow]});
 		}
 	},
@@ -361,15 +354,7 @@ const interactions = {
 	},
 
 	"channel-select": (interaction) => {
-		if(currentAdders[interaction.user.id] == null) {
-			interaction.reply({content: "You are not adding a server", ephemeral: true});
-			return;
-		}
-
-		currentAdders[interaction.user.id].categoryId = interaction.values[0];
-		currentAdders[interaction.user.id].openedModal();
-		delete currentAdders.openedModal;
-		
+		addData[interaction.user.id] = interaction.values[0];
 		interaction.showModal(addChannelModal);
 	},
 
@@ -379,13 +364,13 @@ const interactions = {
 			description = interaction.fields.getTextInputValue("server_description"),
 			logo = interaction.fields.getTextInputValue("logo"),
 			link = interaction.fields.getTextInputValue("link");
-						
+		const categoryId = addData[interaction.user.id];
+		delete addData[interaction.user.id];
+
 		if(!linkRegex.test(logo)) {
-			delete currentAdders[interaction.user.id];
 			interaction.reply({content: "Invalid logo link", ephemeral: true});
 			return;
 		} else if(!discordRegex.test(link)) {
-			delete currentAdders[interaction.user.id];
 			interaction.reply({content: "Invalid discord link invite", ephemeral: true});
 			return;
 		}
@@ -425,11 +410,9 @@ const interactions = {
 		const requestsChannel = interaction.guild.channels.cache.get(config.channels["server-requests"]);
 
 		if(!requestsChannel) {
-			delete currentAdders[interaction.user.id];
 			interaction.reply({content: "Failed to find the requests channel", ephemeral: true});
 			return;
 		} else if(requestsChannel.type != ChannelType.GuildText) {
-			delete currentAdders[interaction.user.id];
 			interaction.reply({content: "The requests channel is not a category!", ephemeral: true});
 			return;
 		}
@@ -438,7 +421,7 @@ const interactions = {
 		database.execute(
 			"INSERT INTO `requests` (`category`, `name`, `shortname`, `description`, `logo`, `link`, `owner`, `message`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
 			[
-				currentAdders[interaction.user.id].categoryId,
+				categoryId,
 				name,
 				shortName,
 				description,
@@ -448,10 +431,8 @@ const interactions = {
 				msg.id
 			]
 		).then(() => {
-			delete currentAdders[interaction.user.id];
 			interaction.reply({content: "Your request has been sent", ephemeral: true});
 		}).catch(err => {
-			delete currentAdders[interaction.user.id];
 			msg.delete().catch(err => err); // Fuck this
 			interaction.reply({content: "Failed to send your request", ephemeral: true});
 			console.error(err);
