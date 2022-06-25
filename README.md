@@ -1,6 +1,7 @@
 # Ranking bot
 
 Ranking bot that ranks servers by their vote count.
+Beaware: This bot uses the dev version of discord.js, Any update to discord.js dev branch can make the unstable.
 
 ## How to use
 
