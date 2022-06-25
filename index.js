@@ -32,9 +32,9 @@ const client = new Client({
 const database = createPool(config.database);
 const addChannelRow = new ActionRowBuilder().setComponents([
 	new SelectMenuBuilder()
-	.setCustomId("channel-select")
-	.setPlaceholder("Select a category")
-	.setMaxValues(1)
+		.setCustomId("channel-select")
+		.setPlaceholder("Select a category")
+		.setMaxValues(1)
 ]);
 
 const addChannelModal = new ModalBuilder()
@@ -42,68 +42,68 @@ const addChannelModal = new ModalBuilder()
 	.setCustomId("add_server")
 	.setComponents([
 		new ActionRowBuilder()
-		.addComponents([
-			new TextInputBuilder()
-			.setCustomId("server_name")
-			.setLabel("Server Name")
-			.setMaxLength(32)
-			.setRequired(true)
-			.setStyle(1)
+			.addComponents([
+				new TextInputBuilder()
+					.setCustomId("server_name")
+					.setLabel("Server Name")
+					.setMaxLength(32)
+					.setRequired(true)
+					.setStyle(1)
 		]),
 		new ActionRowBuilder()
-		.addComponents([
-			new TextInputBuilder()
-			.setCustomId("server_name_short")
-			.setLabel("Short name (Boy RolePlay => boyrp)")
-			.setMaxLength(10)
-			.setRequired(true)
-			.setStyle(1)
+			.addComponents([
+				new TextInputBuilder()
+					.setCustomId("server_name_short")
+					.setLabel("Short name (Boy RolePlay => boyrp)")
+					.setMaxLength(10)
+					.setRequired(true)
+					.setStyle(1)
 		]),
 		new ActionRowBuilder()
-		.addComponents([
-			new TextInputBuilder()
-			.setCustomId("server_description")
-			.setLabel("Server Description")
-			.setMaxLength(1024)
-			.setRequired(true)
-			.setStyle(2)
+			.addComponents([
+				new TextInputBuilder()
+					.setCustomId("server_description")
+					.setLabel("Server Description")
+					.setMaxLength(1024)
+					.setRequired(true)
+					.setStyle(2)
 		]),
 		new ActionRowBuilder()
-		.addComponents([
-			new TextInputBuilder()
-			.setCustomId("logo")
-			.setLabel("Server's Logo")
-			.setMaxLength(1024)
-			.setRequired(true)
-			.setStyle(1)
+			.addComponents([
+				new TextInputBuilder()
+					.setCustomId("logo")
+					.setLabel("Server's Logo")
+					.setMaxLength(1024)
+					.setRequired(true)
+					.setStyle(1)
 		]),
 		new ActionRowBuilder()
-		.addComponents([
-			new TextInputBuilder()
-			.setCustomId("link")
-			.setLabel("Link to server")
-			.setMaxLength(32)
-		.setRequired(true)
-		.setStyle(1)
-	])
-]);
+			.addComponents([
+				new TextInputBuilder()
+					.setCustomId("link")
+					.setLabel("Link to server")
+					.setMaxLength(32)
+					.setRequired(true)
+					.setStyle(1)
+		])
+	]);
 
 const serverRequestButtons = new ActionRowBuilder().setComponents([
 	new ButtonBuilder()
-	.setCustomId("accept_server")
-	.setLabel("Accept")
-	.setStyle(ButtonStyle.Success),
+		.setCustomId("accept_server")
+		.setLabel("Accept")
+		.setStyle(ButtonStyle.Success),
 	new ButtonBuilder()
-	.setCustomId("decline_server")
-	.setLabel("Decline")
-	.setStyle(ButtonStyle.Danger)
+		.setCustomId("decline_server")
+		.setLabel("Decline")
+		.setStyle(ButtonStyle.Danger)
 ]);
 
 const voteButton = new ActionRowBuilder().setComponents([
 	new ButtonBuilder()
-	.setCustomId("vote")
-	.setLabel("Vote")
-	.setStyle(ButtonStyle.Success)
+		.setCustomId("vote")
+		.setLabel("Vote")
+		.setStyle(ButtonStyle.Success)
 ]);
 
 const linkRegex = /(https?:\/\/[^\s]+)/g;
@@ -250,27 +250,27 @@ const interactions = {
 			}).then(channel => {
 				
 				const channelEmbed = new EmbedBuilder()
-				.setAuthor({name: requestData.name, iconURL: requestData.logo})
-				.setDescription(requestData.description)
-				.setColor(Colors.Blue)
-				.setThumbnail(requestData.logo)
-				.setFields([
-					{
-						name: "Owner",
-						value: "<@" + requestData.owner + ">",
-						inline: true
-					},
-					{
-						name: "Discord Link",
-						value: "[Click Here](" + (requestData.link.startsWith("https") ? requestData.link : "https://" + requestData.link) + ")",
-						inline: true
-					},
-					{
-						name: "Votes",
-						value: "0",
-						inline: true
-					}
-				]);
+					.setAuthor({name: requestData.name, iconURL: requestData.logo})
+					.setDescription(requestData.description)
+					.setColor(Colors.Blue)
+					.setThumbnail(requestData.logo)
+					.setFields([
+						{
+							name: "Owner",
+							value: "<@" + requestData.owner + ">",
+							inline: true
+						},
+						{
+							name: "Discord Link",
+							value: "[Click Here](" + (requestData.link.startsWith("https") ? requestData.link : "https://" + requestData.link) + ")",
+							inline: true
+						},
+						{
+							name: "Votes",
+							value: "0",
+							inline: true
+						}
+					]);
 
 				channel.send({embeds: [channelEmbed], components: [voteButton]}).then(() => {
 					database.execute("DELETE FROM `requests` WHERE `message` = ?", [interaction.message.id]);
@@ -346,10 +346,10 @@ const interactions = {
 						if(logChannel) {
 							logChannel.send({embeds: [
 								new EmbedBuilder()
-								.setTitle("Member voted!")
-								.setDescription("**" + interaction.user.tag + "** Voted for " + "<#" + interaction.channel.id + ">\nThe server now have " + (channelData.votes + 1) + " votes")
-								.setColor(Colors.Blue)
-								.setFooter({text: "Made by Elior#0590"})
+									.setTitle("Member voted!")
+									.setDescription("**" + interaction.user.tag + "** Voted for " + "<#" + interaction.channel.id + ">\nThe server now have " + (channelData.votes + 1) + " votes")
+									.setColor(Colors.Blue)
+									.setFooter({text: "Made by Elior#0590"})
 							]}).catch(err => err);
 						}
 					}).catch(err => {
@@ -392,36 +392,36 @@ const interactions = {
 		}
 
 		const message = new EmbedBuilder()
-		.setAuthor({name: "New Server Request."})
-		.setColor(Colors.Blue)
-		.setDescription("Member sent request to add his server, The info is down below.")
-		.setFields([
-			{
-				name: "Requested by",
-				value: interaction.user.tag,
-				inline: true
-			},
-			{
-				name: "Server Name",
-				value: name + " (" + shortName + ")",
-				inline: true
-			},
-			{
-				name: "Server Description",
-				value: description,
-				inline: true
-			},
-			{
-				name: "Server Logo",
-				value: logo,
-				inline: true
-			},
-			{
-				name: "Server Link",
-				value: link,
-				inline: true
-			}
-		]);
+			.setAuthor({name: "New Server Request."})
+			.setColor(Colors.Blue)
+			.setDescription("Member sent request to add his server, The info is down below.")
+			.setFields([
+				{
+					name: "Requested by",
+					value: interaction.user.tag,
+					inline: true
+				},
+				{
+					name: "Server Name",
+					value: name + " (" + shortName + ")",
+					inline: true
+				},
+				{
+					name: "Server Description",
+					value: description,
+					inline: true
+				},
+				{
+					name: "Server Logo",
+					value: logo,
+					inline: true
+				},
+				{
+					name: "Server Link",
+					value: link,
+					inline: true
+				}
+			]);
 
 		const requestsChannel = interaction.guild.channels.cache.get(config.channels["server-requests"]);
 
@@ -486,7 +486,6 @@ client.once("ready", () => {
 	}, config.settings.servers["update-time"]);
 
 	const guild = client.guilds.cache.get(config.client.guild);
-
 
 	if(guild) {
 		guild.commands.fetch().then(guildCommands => {
