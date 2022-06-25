@@ -140,7 +140,7 @@ const commands = [
 			});
 			if (!category) return;
 
-			await database.execute("INSERT INTO `categories` (`channel`) VALUES (?)", [category.id]).then(() => {
+			database.execute("INSERT INTO `categories` (`channel`) VALUES (?)", [category.id]).then(() => {
 				interaction.editReply({content: "Successfully created the category"});
 			}).catch(err => {
 				category.delete().catch(err => err); // fuck this
@@ -198,7 +198,7 @@ const commands = [
 		 */
 		execute: async (interaction) => {
 			await interaction.reply({content: "Deploying commands...", ephemeral: true});
-			await interaction.guild.commands.set(commands.map(command => { // Do not send the execute function
+			interaction.guild.commands.set(commands.map(command => { // Do not send the execute function
 				return {
 					name: command.name,
 					description: command.description,
@@ -273,7 +273,7 @@ const interactions = {
 				}
 			]);
 
-		await channel.send({embeds: [channelEmbed], components: [voteButton]}).then(async () => {
+		channel.send({embeds: [channelEmbed], components: [voteButton]}).then(async () => {
 			await database.execute("DELETE FROM `requests` WHERE `message` = ?", [interaction.message.id]);
 			await database.execute("INSERT INTO `channels` (`category`, `channel`, `owner`) VALUES(?, ?, ?)", [
 				requestData.category,
@@ -360,7 +360,7 @@ const interactions = {
 		}
 	},
 
-	"channel-select": async (interaction) => {
+	"channel-select": (interaction) => {
 		if(currentAdders[interaction.user.id] == null) {
 			interaction.reply({content: "You are not adding a server", ephemeral: true});
 			return;
@@ -491,7 +491,7 @@ client.once("ready", async () => {
 	if(guild) {
 		const guildCommands = await guild.commands.fetch();
 		if(guildCommands.size == 0) {
-			await guild.commands.set(commands.map(command => {
+			guild.commands.set(commands.map(command => {
 				return {
 					name: command.name,
 					description: command.description,
