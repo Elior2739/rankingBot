@@ -453,12 +453,21 @@ client.once("ready", () => {
 				for(let index = 0; index < res.length; index++) {
 					const channel = client.channels.cache.get(res[index].channel);
 
+					if(!channel) {
+						res.splice(index, 1);
+						index--;
+						continue;
+					}
+
 					if(channel && channel.position != index && channel.type == ChannelType.GuildText) {
 						channel.setPosition(index);
-						channel.setName((index + 1) + channel.name.split(" ")[1])
+						channel.setName((index + 1) + "-" + channel.name.split("-")[1])
 					}
 				}
 			}
+		}).catch(err => {
+			console.log("Error happened while updating channel positions, Maybe the database connection is down");
+			console.error(err);	
 		});
 	}, config.settings.servers["update-time"]);
 
