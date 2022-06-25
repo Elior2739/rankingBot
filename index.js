@@ -137,16 +137,16 @@ const commands = [
 			}).catch(err => {
 				interaction.editReply({content: "Error happened while creating category, The error has been logged to the console"});
 				console.error(err);
-				return;
 			});
-			await database.execute("INSERT INTO `categories` (`channel`) VALUES (?)", [category.id]).catch(err => {
+			if (!category) return;
+
+			await database.execute("INSERT INTO `categories` (`channel`) VALUES (?)", [category.id]).then(() => {
+				interaction.editReply({content: "Successfully created the category"});
+			}).catch(err => {
 				category.delete().catch(err => err); // fuck this
 				interaction.editReply({content: "Failed to insert the category to database, The error has been logged to the console."});
 				console.error(err);
-				return;
 			});
-
-			interaction.editReply({content: "Successfully created the category"});
 		}
 	},
 	{
@@ -206,12 +206,12 @@ const commands = [
 					dmPermission: command.dmPermission,
 					options: command.options,
 				}
-			})).catch(err => {
+			})).then(() => {
+				interaction.editReply({content: "Successfully deployed commands"});
+			}).catch(err => {
 				interaction.editReply({content: "Failed to deploy commands, The error has been logged to the console."});
 				console.error(err);
 			});
-
-			interaction.editReply({content: "Successfully deployed commands"});
 		}
 	}
 ];
@@ -247,8 +247,8 @@ const interactions = {
 		}).catch(err => {
 			interaction.reply({content: "Failed to create the channel, The error has been logged to the console.", ephemeral: true})
 			console.error(err);
-			return;
 		})
+		if (!channel) return;
 
 		const channelEmbed = new EmbedBuilder()
 			.setAuthor({name: requestData.name, iconURL: requestData.logo})
@@ -273,21 +273,21 @@ const interactions = {
 				}
 			]);
 
-		await channel.send({embeds: [channelEmbed], components: [voteButton]}).catch(err => {
+		await channel.send({embeds: [channelEmbed], components: [voteButton]}).then(async () => {
+			await database.execute("DELETE FROM `requests` WHERE `message` = ?", [interaction.message.id]);
+			await database.execute("INSERT INTO `channels` (`category`, `channel`, `owner`) VALUES(?, ?, ?)", [
+				requestData.category,
+				channel.id,
+				requestData.owner
+			]);
+
+			interaction.message.delete();
+			interaction.reply({content: "Successfully added the server", ephemeral: true});
+		}).catch(err => {
 			channel.delete();
 			interaction.reply({content: "Failed to send the message, The error has been logged to the console.", ephemeral: true});
 			console.error(err);
-		})
-
-		await database.execute("DELETE FROM `requests` WHERE `message` = ?", [interaction.message.id]);
-		await database.execute("INSERT INTO `channels` (`category`, `channel`, `owner`) VALUES(?, ?, ?)", [
-			requestData.category,
-			channel.id,
-			requestData.owner
-		]);
-
-		interaction.message.delete();
-		interaction.reply({content: "Successfully added the server", ephemeral: true});
+		});
 	},
 
 	"decline_server": (interaction) => {
@@ -325,6 +325,7 @@ const interactions = {
 		}
 		const channelData = res[0];
 
+		let packet;
 		await database.execute(
 			"INSERT INTO `votes` (`channel`, `user`, `at`) VALUES(:channel, :user, :at) ON DUPLICATE KEY UPDATE at = :at, channel = :channel",
 			{
@@ -332,14 +333,15 @@ const interactions = {
 				user: interaction.user.id,
 				at: Date.now()
 			}
-		).catch(err => {
+		).then(async () => {
+			packet = await database.execute("UPDATE `channels` SET `votes` = `votes` + 1 WHERE `id` = ?", [channelData.id]).catch(err => {
+				console.error(err);
+			});
+		}).catch(err => {
 			interaction.reply({content: "Failed to vote, The error has been logged to the console.", ephemeral: true});
 			console.error(err);
 		});
-
-		await database.execute("UPDATE `channels` SET `votes` = `votes` + 1 WHERE `id` = ?", [channelData.id]).catch(err => {
-			console.error(err);
-		});
+		if (!packet) return;
 
 		const embed = interaction.message.embeds[0];
 		embed.fields[2].value = (channelData.votes + 1).toString();
@@ -445,23 +447,26 @@ const interactions = {
 				interaction.user.id,
 				msg.id
 			]
-		).catch(err => {
+		).then(() => {
+			delete currentAdders[interaction.user.id];
+			interaction.reply({content: "Your request has been sent", ephemeral: true});
+		}).catch(err => {
 			delete currentAdders[interaction.user.id];
 			msg.delete().catch(err => err) // Fuck this
 			interaction.reply({content: "Failed to send your request", ephemeral: true});
 			console.error(err);
 		});
-		delete currentAdders[interaction.user.id];
-		interaction.reply({content: "Your request has been sent", ephemeral: true});
 	}
 };
 
 client.once("ready", async () => {
 	setInterval(async () => {
-		const res = (await database.query("SELECT `channel` FROM `channels` ORDER BY `votes` DESC").catch(err => {
+		const res = await database.query("SELECT `channel` FROM `channels` ORDER BY `votes` DESC").catch(err => {
 			console.log("Error happened while updating channel positions, Maybe the database connection is down");
 			console.error(err);	
-		}))[0];
+		});
+		if (!res) return;
+		res = res[0]
 
 		if(res.length > 0) {
 			for(let i = 0; i < res.length; i++) {
@@ -494,12 +499,12 @@ client.once("ready", async () => {
 					dmPermission: command.dmPermission,
 					options: command.options,
 				}
-			})).catch(err => {
+			})).then(() => {
+				console.log("Successfully deployed commands");
+			}).catch(err => {
 				console.log("Failed to deploy commands, The error has been logged to the console.");
 				console.error(err);
-				return;
 			});
-			console.log("Successfully deployed commands");
 		}
 	}
 
