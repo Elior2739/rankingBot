@@ -197,7 +197,7 @@ const commands = [
 		 * @param {ChatInputCommandInteraction} interaction 
 		 */
 		execute: async (interaction) => {
-			await interaction.reply({content: "Deploying commands...", ephemeral: true})
+			await interaction.reply({content: "Deploying commands...", ephemeral: true});
 			await interaction.guild.commands.set(commands.map(command => { // Do not send the execute function
 				return {
 					name: command.name,
@@ -245,9 +245,9 @@ const interactions = {
 				}
 			]
 		}).catch(err => {
-			interaction.reply({content: "Failed to create the channel, The error has been logged to the console.", ephemeral: true})
+			interaction.reply({content: "Failed to create the channel, The error has been logged to the console.", ephemeral: true});
 			console.error(err);
-		})
+		});
 		if (!channel) return;
 
 		const channelEmbed = new EmbedBuilder()
@@ -302,7 +302,7 @@ const interactions = {
 		if(userCooldownData.length > 0) {
 			const roleTime = config.settings.cooldowns.votes.time_remover.reduce((acc, curr) => {
 				return acc + curr.time;
-			}, 0)
+			}, 0);
 			
 			const timePassed = Date.now() - parseInt(userCooldownData[0].at);
 			
@@ -432,7 +432,7 @@ const interactions = {
 			delete currentAdders[interaction.user.id];
 			interaction.reply({content: "The requests channel is not a category!", ephemeral: true});
 			return;
-		};
+		}
 
 		const msg = await requestsChannel.send({embeds: [message], components: [serverRequestButtons]});
 		database.execute(
@@ -452,7 +452,7 @@ const interactions = {
 			interaction.reply({content: "Your request has been sent", ephemeral: true});
 		}).catch(err => {
 			delete currentAdders[interaction.user.id];
-			msg.delete().catch(err => err) // Fuck this
+			msg.delete().catch(err => err); // Fuck this
 			interaction.reply({content: "Failed to send your request", ephemeral: true});
 			console.error(err);
 		});
@@ -466,7 +466,7 @@ client.once("ready", async () => {
 			console.error(err);	
 		});
 		if (!res) return;
-		res = res[0]
+		res = res[0];
 
 		if(res.length > 0) {
 			for(let i = 0; i < res.length; i++) {
@@ -480,7 +480,7 @@ client.once("ready", async () => {
 
 				if(channel && channel.position != i && channel.type == ChannelType.GuildText) {
 					channel.setPosition(i);
-					channel.setName((i + 1) + "-" + channel.name.split("-")[1])
+					channel.setName((i + 1) + "-" + channel.name.split("-")[1]);
 				}
 			}
 		}
@@ -498,7 +498,7 @@ client.once("ready", async () => {
 					defaultMemberPermissions: command.defaultMemberPermissions,
 					dmPermission: command.dmPermission,
 					options: command.options,
-				}
+				};
 			})).then(() => {
 				console.log("Successfully deployed commands");
 			}).catch(err => {
