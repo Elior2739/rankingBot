@@ -94,13 +94,14 @@ const voteButton = new ActionRowBuilder().setComponents([
 
 const linkRegex = /(https?:\/\/[^\s]+)/g;
 const discordRegex = /(https?:\/\/)?(www\.)?((discordapp\.com\/invite)|(discord\.gg))\/(\w+)/gm;
-const currentAdders = []; // Very good name
+const currentAdders = {}; // Very good name
 
 const commands = [
 	{
 		name: "createcategory",
 		description: "Create a new category",
 		defaultMemberPermissions: PermissionFlagsBits.Administrator,
+		dmPermission: false,
 		options: [
 			{
 				name: "name",
@@ -109,7 +110,6 @@ const commands = [
 				type: 3
 			}
 		],
-		dmPermission: false,
 		/**
 		 * @param {ChatInputCommandInteraction} interaction 
 		 */
@@ -146,7 +146,7 @@ const commands = [
 		 * @param {ChatInputCommandInteraction} interaction 
 		 */
 		execute(interaction) {
-			if(currentAdders.includes(interaction.user.id)) {
+			if(currentAdders[interaction.user.id] != null) {
 				interaction.reply({content: "You are already adding a channel"});
 				return;	
 			}
@@ -172,104 +172,10 @@ const commands = [
 						return;
 					}
 	
-					currentAdders.push(interaction.user.id);
+					currentAdders[interaction.user.id] = {openedModal: () => interaction.editReply({content: "Modal has been opened for you.", components: []})}; // How I love discord API
 					addChannelRow.components[0].setOptions(options);
 
 					interaction.editReply({content: "These are the categories that you can use.", components: [addChannelRow]});
-					interaction.channel.awaitMessageComponent({componentType: ComponentType.SelectMenu, time: 60000, filter: (_) => _.user.id == interaction.user.id}).then(resultInteraction => {
-						const categoryId = resultInteraction.values[0];
-
-						interaction.editReply({content: "Modal has been opened for you.", components: []})
-						resultInteraction.showModal(addChannelModal);
-						resultInteraction.awaitModalSubmit({time: 180000, filter: (_) => _.user.id == interaction.user.id}).then(modalInteraction => {
-							const name = modalInteraction.fields.getTextInputValue("server_name"), shortName = modalInteraction.fields.getTextInputValue("server_name_short"), description = modalInteraction.fields.getTextInputValue("server_description"), logo = modalInteraction.fields.getTextInputValue("logo"), link = modalInteraction.fields.getTextInputValue("link");
-						
-							if(!linkRegex.test(logo)) {
-								currentAdders.splice(currentAdders.indexOf(interaction.user.id), 1);
-								modalInteraction.reply({content: "Invalid logo link", ephemeral: true});
-								return;
-							} else if(!discordRegex.test(link)) {
-								currentAdders.splice(currentAdders.indexOf(interaction.user.id), 1);
-								modalInteraction.reply({content: "Invalid discord link invite", ephemeral: true});
-								return;
-							}
-
-							const message = new EmbedBuilder()
-							.setAuthor({name: "Server Request."})
-							.setColor(Colors.Blue)
-							.setDescription("Member sent request to add his server, The info is down below.")
-							.setFields([
-								{
-									name: "Requested by",
-									value: interaction.user.tag,
-									inline: true
-								},
-								{
-									name: "Server Name",
-									value: name + " (" + shortName + ")",
-									inline: true
-								},
-								{
-									name: "Server Description",
-									value: description,
-									inline: true
-								},
-								{
-									name: "Server Logo",
-									value: logo,
-									inline: true
-								},
-								{
-									name: "Server Link",
-									value: link,
-									inline: true
-								}
-							]);
-
-							const requestsChannel = interaction.guild.channels.cache.get(config.channels["server-requests"]);
-
-							if(!requestsChannel) {
-								currentAdders.splice(currentAdders.indexOf(interaction.user.id), 1);
-								modalInteraction.reply({content: "Failed to find the requests channel", ephemeral: true});
-								return;
-							} else if(requestsChannel.type != ChannelType.GuildText) {
-								currentAdders.splice(currentAdders.indexOf(interaction.user.id), 1);
-								modalInteraction.reply({content: "The requests channel is not a category!", ephemeral: true});
-								return;
-							};
-
-							requestsChannel.send({embeds: [message], components: [serverRequestButtons]}).then(message => {
-								database.execute("INSERT INTO `requests` (`category`, `name`, `shortname`, `description`, `logo`, `link`, `owner`, `message`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [
-									categoryId,
-									name,
-									shortName,
-									description,
-									logo,
-									link,
-									interaction.user.id,
-									message.id
-								]).then(() => {
-									currentAdders.splice(currentAdders.indexOf(interaction.user.id), 1);
-									modalInteraction.reply({content: "Your request has been sent", ephemeral: true});
-								}).catch(err => {
-									currentAdders.splice(currentAdders.indexOf(interaction.user.id), 1);
-									message.delete().catch(err => err) // Fuck this
-									modalInteraction.reply({content: "Failed to send your request", ephemeral: true});
-									console.error(err);
-								});
-							}).catch(err => {
-								currentAdders.splice(currentAdders.indexOf(interaction.user.id), 1);
-								interaction.editReply({content: "Failed to send the message, The error has been logged to the console."});
-								console.error(err);
-							})
-						}).catch(() => {
-							currentAdders.splice(currentAdders.indexOf(interaction.user.id), 1);
-							resultInteraction.editReply({content: "You failed to answer in time"});
-						});
-					}).catch(() => {
-						currentAdders.splice(currentAdders.indexOf(interaction.user.id), 1);
-						interaction.editReply({content: "You failed to answer in time", components: []});
-					})
 				})
 			});
 		}
@@ -442,6 +348,99 @@ const interactions = {
 	
 			})
 		})
+	},
+
+	"channel-select": (interaction) => {
+		if(currentAdders[interaction.user.id] == null) {
+			interaction.reply({content: "You are not adding a server", ephemeral: true});
+			return;
+		}
+
+		currentAdders[interaction.user.id].categoryId = interaction.values[0];
+		currentAdders[interaction.user.id].openedModal();
+
+		delete currentAdders.openedModal;
+		
+		interaction.showModal(addChannelModal);
+	},
+
+	"add_server": (interaction) => {
+		const name = interaction.fields.getTextInputValue("server_name"), shortName = interaction.fields.getTextInputValue("server_name_short"), description = interaction.fields.getTextInputValue("server_description"), logo = interaction.fields.getTextInputValue("logo"), link = interaction.fields.getTextInputValue("link");
+						
+		if(!linkRegex.test(logo)) {
+			delete currentAdders[interaction.user.id];
+			interaction.reply({content: "Invalid logo link", ephemeral: true});
+			return;
+		} else if(!discordRegex.test(link)) {
+			delete currentAdders[interaction.user.id];
+			interaction.reply({content: "Invalid discord link invite", ephemeral: true});
+			return;
+		}
+
+		const message = new EmbedBuilder()
+		.setAuthor({name: "New Server Request."})
+		.setColor(Colors.Blue)
+		.setDescription("Member sent request to add his server, The info is down below.")
+		.setFields([
+			{
+				name: "Requested by",
+				value: interaction.user.tag,
+				inline: true
+			},
+			{
+				name: "Server Name",
+				value: name + " (" + shortName + ")",
+				inline: true
+			},
+			{
+				name: "Server Description",
+				value: description,
+				inline: true
+			},
+			{
+				name: "Server Logo",
+				value: logo,
+				inline: true
+			},
+			{
+				name: "Server Link",
+				value: link,
+				inline: true
+			}
+		]);
+
+		const requestsChannel = interaction.guild.channels.cache.get(config.channels["server-requests"]);
+
+		if(!requestsChannel) {
+			delete currentAdders[interaction.user.id];
+			interaction.reply({content: "Failed to find the requests channel", ephemeral: true});
+			return;
+		} else if(requestsChannel.type != ChannelType.GuildText) {
+			delete currentAdders[interaction.user.id];
+			interaction.reply({content: "The requests channel is not a category!", ephemeral: true});
+			return;
+		};
+
+		requestsChannel.send({embeds: [message], components: [serverRequestButtons]}).then(message => {
+			database.execute("INSERT INTO `requests` (`category`, `name`, `shortname`, `description`, `logo`, `link`, `owner`, `message`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [
+				currentAdders[interaction.user.id].categoryId,
+				name,
+				shortName,
+				description,
+				logo,
+				link,
+				interaction.user.id,
+				message.id
+			]).then(() => {
+				delete currentAdders[interaction.user.id];
+				interaction.reply({content: "Your request has been sent", ephemeral: true});
+			}).catch(err => {
+				delete currentAdders[interaction.user.id];
+				message.delete().catch(err => err) // Fuck this
+				interaction.reply({content: "Failed to send your request", ephemeral: true});
+				console.error(err);
+			});
+		});
 	}
 };
 
@@ -468,7 +467,7 @@ client.once("ready", () => {
 
 	if(guild) {
 		guild.commands.fetch().then(guildCommands => {
-			if(guildCommands.size ==	 0) {
+			if(guildCommands.size == 0) {
 				guild.commands.set(commands.map(command => {
 					return {
 						name: command.name,
