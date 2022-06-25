@@ -461,7 +461,7 @@ const interactions = {
 
 client.once("ready", async () => {
 	setInterval(async () => {
-		const res = await database.query("SELECT `channel` FROM `channels` ORDER BY `votes` DESC").catch(err => {
+		let res = await database.query("SELECT `channel` FROM `channels` ORDER BY `votes` DESC").catch(err => {
 			console.log("Error happened while updating channel positions, Maybe the database connection is down");
 			console.error(err);	
 		});
