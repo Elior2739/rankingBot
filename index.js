@@ -1,8 +1,22 @@
 const config = require("./config.json");
 const humanize = require("humanize-duration");
-
-const { Client, Partials, PermissionFlagsBits, ChatInputCommandInteraction, ChannelType, ComponentType, TextInputBuilder, ModalBuilder, SelectMenuBuilder, ActionRowBuilder, ButtonStyle, ButtonBuilder, Colors, EmbedBuilder } = require("discord.js");
+const {
+	Client,
+	Partials,
+	PermissionFlagsBits,
+	ChatInputCommandInteraction,
+	ChannelType,
+	TextInputBuilder,
+	ModalBuilder,
+	SelectMenuBuilder,
+	ActionRowBuilder,
+	ButtonStyle,
+	ButtonBuilder,
+	Colors,
+	EmbedBuilder
+} = require("discord.js");
 const { createPool } = require("mysql2/promise");
+
 const client = new Client({
 	intents: [
 		"Guilds",
