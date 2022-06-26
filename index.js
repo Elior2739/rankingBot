@@ -441,28 +441,26 @@ const interactions = {
 };
 
 client.once("ready", async () => {
-	setInterval(async () => {
-		let res = await database.query("SELECT `channel` FROM `channels` ORDER BY `votes` DESC").catch(err => {
+	
+	const positionIntervalId = setInterval(async () => {
+		const res = (await database.query("SELECT `channel` FROM `channels` ORDER BY `votes` DESC").catch(err => {
 			console.log("Error happened while updating channel positions, Maybe the database connection is down");
 			console.error(err);	
-		});
-		if (!res) return;
-		res = res[0];
+			clearInterval(positionIntervalId);
+		}))[0];
 
-		if(res.length > 0) {
-			for(let i = 0; i < res.length; i++) {
-				const channel = client.channels.cache.get(res[i].channel);
+		for(let i = 0; i < res.length; i++) {
+			const channel = client.channels.cache.get(res[i].channel);
 
-				if(!channel) {
-					res.splice(i, 1);
-					i--;
-					continue;
-				}
+			if(!channel) {
+				res.splice(i, 1);
+				i--;
+				continue;
+			}
 
-				if(channel && channel.position != i && channel.type == ChannelType.GuildText) {
-					channel.setPosition(i);
-					channel.setName((i + 1) + "-" + channel.name.split("-")[1]);
-				}
+			if(channel.position != i && channel.type == ChannelType.GuildText) {
+				channel.setPosition(i);
+				channel.setName((i + 1) + "-" + channel.name.split("-")[1]);
 			}
 		}
 	}, config.settings.servers["update-time"]);
