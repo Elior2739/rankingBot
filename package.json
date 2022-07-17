@@ -1,17 +1,8 @@
 {
-  "dependencies": {
-    "discord.js": "^14.0.1",
-    "humanize-duration": "^3.27.2",
-    "mysql2": "^2.3.3"
-  },
   "name": "rankingbot",
   "version": "1.0.0",
   "description": "Ranking bot that's ranks servers by their vote count",
   "main": "index.js",
-  "devDependencies": {},
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Elior2739/rankingBot.git"
@@ -27,5 +18,10 @@
   "bugs": {
     "url": "https://github.com/Elior2739/rankingBot/issues"
   },
-  "homepage": "https://github.com/Elior2739/rankingBot#readme"
+  "homepage": "https://github.com/Elior2739/rankingBot#readme",
+  "dependencies": {
+    "discord.js": "^14.0.1",
+    "humanize-duration": "^3.27.2",
+    "mysql2": "^2.3.3"
+  }
 }
