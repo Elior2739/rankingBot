@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "discord.js": "14.0.0-dev.1656060492-e24970e",
+    "discord.js": "^14.0.1",
     "humanize-duration": "^3.27.2",
     "mysql2": "^2.3.3"
   },
